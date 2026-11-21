@@ -1,8 +1,220 @@
-/*
+.om-dashboard {
+	--om-accent: #2f6f6b;
+	--om-gold: #a9762f;
+	--om-serif: Georgia, 'Times New Roman', 'Noto Serif TC', serif;
+	padding-bottom: 32px;
+}
 
-This CSS file will be included with your plugin, and
-available in the app when your plugin is enabled.
+.theme-dark .om-dashboard {
+	--om-accent: #66b2ab;
+	--om-gold: #d6a657;
+}
 
-If your plugin does not need CSS, delete this file.
+/* Full-width masthead: image + dark veil, search floating on the veil. */
+.om-hero {
+	position: relative;
+	width: 100%;
+	height: 33vh;
+	min-height: 220px;
+	display: flex;
+	align-items: flex-end;
+	justify-content: center;
+	padding: 24px;
+	background-color: #16232a;
+	background-image:
+		repeating-linear-gradient(90deg, transparent 0 39px, rgba(255, 255, 255, 0.035) 39px 40px),
+		linear-gradient(135deg, #16232a, #27403f);
+	background-size: cover;
+	background-position: center;
+}
 
-*/
+.om-hero::before {
+	content: '';
+	position: absolute;
+	inset: 0;
+	background: linear-gradient(180deg, rgba(12, 20, 26, 0.1), rgba(12, 20, 26, 0.72));
+	pointer-events: none;
+}
+
+.om-search {
+	position: relative;
+	z-index: 1;
+	display: flex;
+	align-items: center;
+	gap: 10px;
+	width: min(560px, 100%);
+	padding: 10px 16px;
+	color: #1e3a5f;
+	background: rgba(255, 255, 255, 0.88);
+	border: 1px solid rgba(30, 58, 95, 0.25);
+	border-radius: 6px;
+	box-shadow: 0 2px 8px rgba(0, 0, 0, 0.35);
+}
+
+.om-search input {
+	flex: 1;
+	width: 100%;
+	margin: 0;
+	padding: 0;
+	color: #1e3a5f;
+	background: transparent;
+	border: 0;
+	border-radius: 6px;
+	box-shadow: none;
+	font-size: 15px;
+	font-weight: 500;
+}
+
+.om-search input::placeholder {
+	color: rgba(30, 58, 95, 0.55);
+}
+
+.om-search input:focus-visible {
+	outline: 1px solid var(--om-gold);
+	outline-offset: 4px;
+}
+
+/* Card grid: flat, ruled cards rather than identical shadowed tiles. */
+.om-cards {
+	display: grid;
+	grid-template-columns: repeat(3, minmax(0, 1fr));
+	gap: 18px;
+	width: 100%;
+	max-width: 1180px;
+	margin: 0 auto;
+	padding: 26px 20px 0;
+}
+
+.om-card {
+	position: relative;
+	min-height: 210px;
+	padding: 20px;
+	background: var(--background-secondary);
+	border: 1px solid var(--background-modifier-border);
+	border-top: 2px solid var(--om-accent);
+	border-radius: 2px;
+}
+
+.om-card-title {
+	margin-bottom: 16px;
+	color: var(--text-muted);
+	font-size: 12px;
+	letter-spacing: 0.08em;
+}
+
+/* Date card: almanac numerals. */
+.om-date-card {
+	display: flex;
+	flex-direction: column;
+	align-items: center;
+	justify-content: center;
+}
+
+.om-date-year,
+.om-date-month {
+	position: absolute;
+	top: 16px;
+	color: var(--text-muted);
+	font-family: var(--om-serif);
+	font-size: 20px;
+}
+
+.om-date-year { left: 20px; }
+.om-date-month { right: 20px; color: var(--om-gold); }
+
+.om-date-day {
+	font-family: var(--om-serif);
+	font-size: clamp(72px, 9vw, 116px);
+	line-height: 0.95;
+	font-variant-numeric: tabular-nums;
+}
+
+.om-date-weekday {
+	margin-top: 10px;
+	color: var(--text-muted);
+	font-size: 14px;
+	letter-spacing: 0.3em;
+}
+
+/* Action card: stacked rules, no button chrome until hover. */
+.om-actions-card {
+	display: flex;
+	flex-direction: column;
+}
+
+.om-action {
+	display: flex;
+	align-items: center;
+	gap: 10px;
+	width: 100%;
+	margin: 0;
+	padding: 11px 4px;
+	color: var(--text-normal);
+	text-align: left;
+	background: transparent;
+	border: 0;
+	border-bottom: 1px solid var(--background-modifier-border);
+	border-radius: 0;
+	box-shadow: none;
+	cursor: pointer;
+}
+
+.om-action:last-child { border-bottom: 0; }
+
+.om-action .svg-icon { color: var(--om-accent); }
+
+.om-action:hover {
+	color: var(--om-accent);
+	background: var(--background-modifier-hover);
+}
+
+.om-action:focus-visible {
+	outline: 1px solid var(--om-accent);
+	outline-offset: 2px;
+}
+
+/* Stats card: label / numeral pairs. */
+.om-stat {
+	display: flex;
+	align-items: baseline;
+	justify-content: space-between;
+	padding: 7px 0;
+	border-bottom: 1px solid var(--background-modifier-border);
+}
+
+.om-stat:last-child { border-bottom: 0; }
+
+.om-stat-label { color: var(--text-muted); }
+
+.om-stat-value {
+	font-family: var(--om-serif);
+	font-size: 28px;
+	font-variant-numeric: tabular-nums;
+}
+
+.om-upload {
+	display: flex;
+	flex-wrap: wrap;
+	align-items: center;
+	gap: 12px;
+	padding: 12px 0 18px;
+	color: var(--text-muted);
+	font-size: 13px;
+}
+
+.om-upload input { max-width: 100%; }
+
+@media (max-width: 900px) {
+	.om-cards { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+	.om-date-card { grid-column: 1 / -1; min-height: 180px; }
+}
+
+@media (max-width: 600px) {
+	.om-hero { min-height: 180px; padding: 16px; }
+	.om-cards { grid-template-columns: 1fr; padding: 18px 14px 0; }
+	.om-date-card { grid-column: auto; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+	.om-action { transition: none; }
+}
