@@ -2,7 +2,7 @@
 	"id": "om-dashboard",
 	"name": "OM Dashboard",
 	"version": "0.0.1",
-	"minAppVersion": "1.7.2",
+	"minAppVersion": "1.8.7",
 	"description": "OM Dashboard for Obsidian.",
 	"author": "Obsidian",
 	"authorUrl": "https://obsidian.md",

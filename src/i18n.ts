@@ -1,0 +1,134 @@
+import { getLanguage } from 'obsidian';
+
+export type Lang = 'zh-TW' | 'zh-CN' | 'en';
+export type LanguageSetting = 'auto' | Lang;
+
+export const LANGUAGE_OPTIONS: { value: LanguageSetting; label: string }[] = [
+	{ value: 'auto', label: 'Follow Obsidian' },
+	{ value: 'zh-TW', label: '繁體中文' },
+	{ value: 'zh-CN', label: '简体中文' },
+	{ value: 'en', label: 'English' },
+];
+
+export function resolveLanguage(setting: string | undefined): Lang {
+	if (setting === 'zh-TW' || setting === 'zh-CN' || setting === 'en') return setting;
+	let code = '';
+	try {
+		code = (getLanguage?.() ?? 'en').toLowerCase();
+	} catch {
+		code = 'en';
+	}
+	if (code.startsWith('zh')) {
+		return /tw|hant|hk|mo/.test(code) ? 'zh-TW' : 'zh-CN';
+	}
+	return 'en';
+}
+
+type Dict = Record<string, string | string[]>;
+
+const DICTS: Record<Lang, Dict> = {
+	'zh-TW': {
+		settingsHeading: '儀表板設定',
+		notesRoot: '筆記根目錄',
+		notesRootDesc: '留白則統計整個 vault 的筆記（不含 dotpm 專案與任務）。',
+		notesRootPlaceholder: '例如：個人筆記',
+		headerBackground: '頁首背景圖',
+		headerBackgroundDesc: '輸入 vault 內圖片路徑，或從下方上傳。',
+		uploadHint: '拖放或選擇圖片上傳到 vault（建議尺寸：1920 × 640 px）',
+		openOnStartup: '啟動時開啟',
+		openOnStartupDesc: 'Obsidian 啟動時自動在主工作區開啟 Dashboard。',
+		language: '語言',
+		languageDesc: '介面語言。預設跟隨 Obsidian。',
+		headerUpdated: '頁首背景圖已更新',
+		uploadFailed: '上傳失敗：',
+		cannotCreateFolder: '無法建立資料夾 ',
+		openDashboard: '開啟 Dashboard',
+		searchPlaceholder: '搜尋筆記…',
+		searchAria: '搜尋筆記',
+		quickAdd: '快速新增',
+		newNote: '新增筆記',
+		newProject: '新增專案',
+		newTask: '新增任務',
+		stats: '統計',
+		notes: '筆記',
+		projects: '專案',
+		tasks: '任務',
+		unnamed: '未命名',
+		cannotCreateNote: '無法建立筆記：',
+		cannotRunDotpm: '無法執行 dotpm 指令：',
+		weekdays: ['星期日', '星期一', '星期二', '星期三', '星期四', '星期五', '星期六'],
+	},
+	'zh-CN': {
+		settingsHeading: '仪表板设置',
+		notesRoot: '笔记根目录',
+		notesRootDesc: '留空则统计整个 vault 的笔记（不含 dotpm 项目与任务）。',
+		notesRootPlaceholder: '例如：个人笔记',
+		headerBackground: '页首背景图',
+		headerBackgroundDesc: '输入 vault 内图片路径，或从下方上传。',
+		uploadHint: '拖放或选择图片上传到 vault（建议尺寸：1920 × 640 px）',
+		openOnStartup: '启动时开启',
+		openOnStartupDesc: 'Obsidian 启动时自动在主工作区开启 Dashboard。',
+		language: '语言',
+		languageDesc: '界面语言。默认跟随 Obsidian。',
+		headerUpdated: '页首背景图已更新',
+		uploadFailed: '上传失败：',
+		cannotCreateFolder: '无法创建文件夹 ',
+		openDashboard: '打开 Dashboard',
+		searchPlaceholder: '搜索笔记…',
+		searchAria: '搜索笔记',
+		quickAdd: '快速新增',
+		newNote: '新增笔记',
+		newProject: '新增项目',
+		newTask: '新增任务',
+		stats: '统计',
+		notes: '笔记',
+		projects: '项目',
+		tasks: '任务',
+		unnamed: '未命名',
+		cannotCreateNote: '无法创建笔记：',
+		cannotRunDotpm: '无法执行 dotpm 指令：',
+		weekdays: ['星期日', '星期一', '星期二', '星期三', '星期四', '星期五', '星期六'],
+	},
+	en: {
+		settingsHeading: 'Dashboard settings',
+		notesRoot: 'Notes root folder',
+		notesRootDesc: 'Leave blank to count notes across the whole vault (excluding dotpm projects and tasks).',
+		notesRootPlaceholder: 'e.g. Personal notes',
+		headerBackground: 'Header background image',
+		headerBackgroundDesc: 'Enter an image path inside the vault, or upload below.',
+		uploadHint: 'Drag and drop or choose an image to upload to the vault (recommended size: 1920 × 640 px)',
+		openOnStartup: 'Open on startup',
+		openOnStartupDesc: 'Automatically open the Dashboard in the main workspace when Obsidian starts.',
+		language: 'Language',
+		languageDesc: 'Interface language. Defaults to follow Obsidian.',
+		headerUpdated: 'Header background updated',
+		uploadFailed: 'Upload failed: ',
+		cannotCreateFolder: 'Cannot create folder ',
+		openDashboard: 'Open Dashboard',
+		searchPlaceholder: 'Search notes…',
+		searchAria: 'Search notes',
+		quickAdd: 'Quick add',
+		newNote: 'New note',
+		newProject: 'New project',
+		newTask: 'New task',
+		stats: 'Statistics',
+		notes: 'Notes',
+		projects: 'Projects',
+		tasks: 'Tasks',
+		unnamed: 'Untitled',
+		cannotCreateNote: 'Cannot create note: ',
+		cannotRunDotpm: 'Cannot run dotpm command: ',
+		weekdays: ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'],
+	},
+};
+
+export function t(lang: Lang, key: string): string {
+	const value = DICTS[lang][key] ?? DICTS.en[key];
+	if (Array.isArray(value)) return value.join('');
+	if (typeof value === 'string') return value;
+	return key;
+}
+
+export function weekdays(lang: Lang): string[] {
+	return DICTS[lang].weekdays as string[];
+}

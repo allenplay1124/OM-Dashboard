@@ -1,4 +1,5 @@
 import { Plugin } from 'obsidian';
+import { resolveLanguage, t } from './i18n';
 import { DEFAULT_SETTINGS, OMDashboardSettings } from './settings';
 import { OMDashboardSettingTab } from './settingsTab';
 import { OMDashboardView, VIEW_TYPE_OM_DASHBOARD } from './view';
@@ -12,12 +13,13 @@ export default class OMDashboardPlugin extends Plugin {
 
 		this.registerView(VIEW_TYPE_OM_DASHBOARD, (leaf) => new OMDashboardView(leaf, this.settings));
 
-		this.addRibbonIcon('layout-dashboard', '開啟 dashboard', () => {
+		const openLabel = t(resolveLanguage(this.settings.language), 'openDashboard');
+		this.addRibbonIcon('layout-dashboard', openLabel, () => {
 			void this.openDashboard();
 		});
 		this.addCommand({
 			id: 'open-dashboard',
-			name: '開啟 dashboard',
+			name: openLabel,
 			callback: () => void this.openDashboard(),
 		});
 		this.addSettingTab(new OMDashboardSettingTab(this.app, this));

@@ -1,5 +1,6 @@
 import { App, ItemView, Notice, setIcon, TFile, WorkspaceLeaf } from 'obsidian';
 import { countDashboard, DashboardCounts } from './counters';
+import { Lang, resolveLanguage, t, weekdays } from './i18n';
 import { OMDashboardSettings } from './settings';
 
 export const VIEW_TYPE_OM_DASHBOARD = 'om-dashboard';
@@ -66,15 +67,16 @@ export class OMDashboardView extends ItemView {
 		const root = this.contentEl;
 		root.empty();
 		root.addClass('om-dashboard');
+		const lang = resolveLanguage(this.settings.language);
 
-		this.renderHero(root);
+		this.renderHero(root, lang);
 		const cards = root.createDiv({ cls: 'om-cards' });
-		this.renderDateCard(cards.createDiv({ cls: 'om-card om-date-card' }));
-		this.renderActionsCard(cards.createDiv({ cls: 'om-card om-actions-card' }));
-		this.renderStatsCard(cards.createDiv({ cls: 'om-card om-stats-card' }));
+		this.renderDateCard(cards.createDiv({ cls: 'om-card om-date-card' }), lang);
+		this.renderActionsCard(cards.createDiv({ cls: 'om-card om-actions-card' }), lang);
+		this.renderStatsCard(cards.createDiv({ cls: 'om-card om-stats-card' }), lang);
 	}
 
-	private renderHero(root: HTMLElement): void {
+	private renderHero(root: HTMLElement, lang: Lang): void {
 		const hero = root.createDiv({ cls: 'om-hero' });
 		if (this.settings.headerBackground) {
 			const file = this.app.vault.getAbstractFileByPath(this.settings.headerBackground);
@@ -87,8 +89,8 @@ export class OMDashboardView extends ItemView {
 		setIcon(search, 'search');
 		const input = search.createEl('input', {
 			type: 'search',
-			placeholder: '搜尋筆記…',
-			attr: { 'aria-label': '搜尋筆記' },
+			placeholder: t(lang, 'searchPlaceholder'),
+			attr: { 'aria-label': t(lang, 'searchAria') },
 		});
 		input.addEventListener('keydown', (event) => {
 			if (event.key !== 'Enter') return;
@@ -105,7 +107,7 @@ export class OMDashboardView extends ItemView {
 		}
 	}
 
-	private renderDateCard(card: HTMLElement): void {
+	private renderDateCard(card: HTMLElement, lang: Lang): void {
 		const now = new Date();
 		card.createSpan({ cls: 'om-date-year', text: String(now.getFullYear()) });
 		card.createSpan({
@@ -115,16 +117,16 @@ export class OMDashboardView extends ItemView {
 		card.createDiv({ cls: 'om-date-day', text: String(now.getDate()).padStart(2, '0') });
 		card.createDiv({
 			cls: 'om-date-weekday',
-			text: `星期${'日一二三四五六'[now.getDay()] ?? ''}`,
+			text: weekdays(lang)[now.getDay()] ?? '',
 		});
 	}
 
-	private renderActionsCard(card: HTMLElement): void {
-		card.createDiv({ cls: 'om-card-title', text: '快速新增' });
+	private renderActionsCard(card: HTMLElement, lang: Lang): void {
+		card.createDiv({ cls: 'om-card-title', text: t(lang, 'quickAdd') });
 		const actions: Array<[string, string, () => void | Promise<void>]> = [
-			['file-plus', '新增筆記', () => this.createNote()],
-			['folder-plus', '新增專案', () => this.runDotpm('new-project')],
-			['checkbox', '新增任務', () => this.runDotpm('new-task')],
+			['file-plus', t(lang, 'newNote'), () => this.createNote(lang)],
+			['folder-plus', t(lang, 'newProject'), () => this.runDotpm('new-project', lang)],
+			['checkbox', t(lang, 'newTask'), () => this.runDotpm('new-task', lang)],
 		];
 		for (const [icon, label, action] of actions) {
 			const button = card.createEl('button', { cls: 'om-action' });
@@ -134,15 +136,15 @@ export class OMDashboardView extends ItemView {
 		}
 	}
 
-	private renderStatsCard(card: HTMLElement): void {
+	private renderStatsCard(card: HTMLElement, lang: Lang): void {
 		const counts = countDashboard(this.app, this.settings.notesRoot);
 		this.lastCounts = counts;
 		this.statValues = [];
-		card.createDiv({ cls: 'om-card-title', text: '統計' });
+		card.createDiv({ cls: 'om-card-title', text: t(lang, 'stats') });
 		const rows: Array<[string, number]> = [
-			['筆記', counts.notes],
-			['專案', counts.projects],
-			['任務', counts.tasks],
+			[t(lang, 'notes'), counts.notes],
+			[t(lang, 'projects'), counts.projects],
+			[t(lang, 'tasks'), counts.tasks],
 		];
 		for (const [label, value] of rows) {
 			const row = card.createDiv({ cls: 'om-stat' });
@@ -151,9 +153,9 @@ export class OMDashboardView extends ItemView {
 		}
 	}
 
-	private async createNote(): Promise<void> {
+	private async createNote(lang: Lang): Promise<void> {
 		const folder = this.settings.notesRoot.trim().replace(/^\/+|\/+$/g, '');
-		const base = folder ? `${folder}/未命名` : '未命名';
+		const base = folder ? `${folder}/${t(lang, 'unnamed')}` : t(lang, 'unnamed');
 		let path = `${base}.md`;
 		let index = 1;
 		while (this.app.vault.getAbstractFileByPath(path)) {
@@ -164,15 +166,15 @@ export class OMDashboardView extends ItemView {
 			const file = await this.app.vault.create(path, '');
 			await this.app.workspace.getLeaf(false).openFile(file);
 		} catch (error) {
-			new Notice(`無法建立筆記：${String(error)}`);
+			new Notice(`${t(lang, 'cannotCreateNote')}${String(error)}`);
 		}
 	}
 
-	private async runDotpm(command: 'new-project' | 'new-task'): Promise<void> {
+	private async runDotpm(command: 'new-project' | 'new-task', lang: Lang): Promise<void> {
 		try {
 			await (this.app as CommandApp).commands.executeCommandById(`project-manager:${command}`);
 		} catch (error) {
-			new Notice(`無法執行 dotpm 指令：${String(error)}`);
+			new Notice(`${t(lang, 'cannotRunDotpm')}${String(error)}`);
 		}
 	}
 }

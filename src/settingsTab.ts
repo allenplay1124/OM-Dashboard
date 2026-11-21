@@ -1,4 +1,5 @@
 import { App, Notice, normalizePath, Plugin, PluginSettingTab, Setting, TFolder } from 'obsidian';
+import { LANGUAGE_OPTIONS, resolveLanguage, t } from './i18n';
 import { OMDashboardSettings } from './settings';
 
 interface DashboardPlugin extends Plugin {
@@ -17,14 +18,30 @@ export class OMDashboardSettingTab extends PluginSettingTab {
 
 	display(): void {
 		this.containerEl.empty();
-		new Setting(this.containerEl).setName('儀表板設定').setHeading();
+		const lang = resolveLanguage(this.plugin.settings.language);
+		new Setting(this.containerEl).setName(t(lang, 'settingsHeading')).setHeading();
 
 		new Setting(this.containerEl)
-			.setName('筆記根目錄')
-			.setDesc('留白則統計整個 vault 的筆記（不含 dotpm 專案與任務）。')
+			.setName(t(lang, 'language'))
+			.setDesc(t(lang, 'languageDesc'))
+			.addDropdown((dropdown) =>
+				dropdown
+					.addOptions(Object.fromEntries(LANGUAGE_OPTIONS.map((o) => [o.value, o.label])))
+					.setValue(this.plugin.settings.language)
+					.onChange(async (value) => {
+						this.plugin.settings.language = value as OMDashboardSettings['language'];
+						await this.plugin.saveSettings();
+						this.plugin.rebuildViews();
+						this.display();
+					}),
+			);
+
+		new Setting(this.containerEl)
+			.setName(t(lang, 'notesRoot'))
+			.setDesc(t(lang, 'notesRootDesc'))
 			.addText((text) =>
 				text
-					.setPlaceholder('例如：個人筆記')
+					.setPlaceholder(t(lang, 'notesRootPlaceholder'))
 					.setValue(this.plugin.settings.notesRoot)
 					.onChange(async (value) => {
 						this.plugin.settings.notesRoot = value.trim();
@@ -34,8 +51,8 @@ export class OMDashboardSettingTab extends PluginSettingTab {
 			);
 
 		new Setting(this.containerEl)
-			.setName('頁首背景圖')
-			.setDesc('輸入 vault 內圖片路徑，或從下方上傳。')
+			.setName(t(lang, 'headerBackground'))
+			.setDesc(t(lang, 'headerBackgroundDesc'))
 			.addText((text) =>
 				text
 					.setPlaceholder('附件/om-dashboard/banner.jpg')
@@ -48,7 +65,7 @@ export class OMDashboardSettingTab extends PluginSettingTab {
 			);
 
 		const uploader = this.containerEl.createDiv({ cls: 'om-upload' });
-		uploader.createSpan({ text: '拖放或選擇圖片上傳到 vault（建議尺寸：1920 × 640 px）' });
+		uploader.createSpan({ text: t(lang, 'uploadHint') });
 		const input = uploader.createEl('input', {
 			type: 'file',
 			attr: { accept: 'image/*' },
@@ -65,8 +82,8 @@ export class OMDashboardSettingTab extends PluginSettingTab {
 		});
 
 		new Setting(this.containerEl)
-			.setName('啟動時開啟')
-			.setDesc('Obsidian 啟動時自動在主工作區開啟 Dashboard。')
+			.setName(t(lang, 'openOnStartup'))
+			.setDesc(t(lang, 'openOnStartupDesc'))
 			.addToggle((toggle) =>
 				toggle.setValue(this.plugin.settings.openOnStartup).onChange(async (value) => {
 					this.plugin.settings.openOnStartup = value;
@@ -91,10 +108,10 @@ export class OMDashboardSettingTab extends PluginSettingTab {
 			this.plugin.settings.headerBackground = path;
 			await this.plugin.saveSettings();
 			this.plugin.rebuildViews();
-			new Notice('頁首背景圖已更新');
+			new Notice(t(resolveLanguage(this.plugin.settings.language), 'headerUpdated'));
 			this.display();
 		} catch (error) {
-			new Notice(`上傳失敗：${String(error)}`);
+			new Notice(`${t(resolveLanguage(this.plugin.settings.language), 'uploadFailed')}${String(error)}`);
 		}
 	}
 
@@ -107,7 +124,7 @@ export class OMDashboardSettingTab extends PluginSettingTab {
 			try {
 				await this.app.vault.createFolder(current);
 			} catch (error) {
-				new Notice(`無法建立資料夾 ${current}：${String(error)}`);
+				new Notice(`${t(resolveLanguage(this.plugin.settings.language), 'cannotCreateFolder')}${current}：${String(error)}`);
 			}
 		}
 	}
