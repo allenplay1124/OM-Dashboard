@@ -2,7 +2,11 @@
 
 把 Obsidian 變成個人工作台的自訂 Dashboard 檢視：一眼看到今天、快速新增內容，並統計筆記、專案與任務。
 
-## 功能
+---
+
+## 第一部分：一般使用者
+
+### 功能
 
 - **頁首**：可設定背景圖與問候語；依目前時間顯示「早安／午安／晚安」加上設定的暱稱（06:00–10:59 早安、11:00–17:59 午安、18:00–05:59 晚安）；在搜尋框輸入關鍵字後按 Enter，會開啟 Obsidian 全域搜尋並帶入關鍵字。
 - **日期卡**：顯示當天的年、月、日與星期（跟隨系統語言設定）。
@@ -15,18 +19,25 @@
 - **標籤雲**：第三列右側卡片，依標籤使用次數決定字級，文字為彩虹漸層；點擊標籤會開啟 Obsidian 全域搜尋並帶入 `tag:#標籤`。
 - **自動更新**：vault 內新增、刪除、重命名檔案或筆記內容變更後，約 1 秒內更新儀表板。
 
-## 需求
+### 需求
 
-- Obsidian 1.8.7 以上。插件未限制桌面平台。
-- 選用：dotpm（插件 ID `project-manager`）。「新增專案」「新增任務」兩顆按鈕會呼叫它的指令；統計的狀態／優先級標籤與顏色也讀自它的設定。未安裝時，這兩顆按鈕仍會出現，但執行會失敗；標籤則退回顯示原始 ID。
+- Obsidian 1.8.7 以上。插件未限制桌面平台（`isDesktopOnly: false`）。
 
-## 安裝
+#### 第三方插件（相依性）
+
+本插件可與以下第三方插件整合，以提供完整功能；未安裝時仍可運作，但對應功能會降級或失敗：
+
+- **dotpm / obsidian-pm**：專案管理插件。OM Dashboard 的「新增專案」「新增任務」兩顆按鈕會呼叫它的指令；統計的狀態／優先級標籤與顏色也讀自它的設定。
+  - 專案 Repo：https://github.com/dotpm/obsidian-pm
+  - 未安裝時，這兩顆按鈕仍會出現，但執行會失敗；標籤則退回顯示原始 ID。
+
+### 安裝
 
 1. 取得 `main.js`、`manifest.json`、`styles.css`（自行建置或從 GitHub release 下載）。
 2. 放到 `<vault>/.obsidian/plugins/om-dashboard/`。
 3. 重新載入 Obsidian，到 **設定 → 社群插件** 啟用 **OM Dashboard**。
 
-## 使用
+### 使用
 
 開啟方式二選一：
 
@@ -35,7 +46,7 @@
 
 再次開啟會重用現有的 Dashboard 分頁；從設定勾選啟動時開啟時，會另開新分頁。
 
-### 設定
+#### 設定
 
 到 **設定 → 社群插件 → OM Dashboard**：
 
@@ -50,7 +61,7 @@
 
 介面文字由 `src/i18n.ts` 集中管理，目前支援繁體中文、简体中文與英文。
 
-## 統計規則
+### 統計規則
 
 統計只讀取 Markdown 檔案的 frontmatter，不會修改筆記內容：
 
@@ -68,32 +79,71 @@ priority: high
 ---
 ```
 
-## 開發
+---
 
-需要 Node.js 18 以上，並使用 npm。
+## 第二部分：二次開發者
+
+### 開發環境
+
+- Node.js 18 以上（建議 LTS）。
+- 套件管理器：npm。
+- 打包工具：esbuild（`esbuild.config.mjs`）。
+- 型別：`obsidian` 型別定義（`latest`）。
+
+### 安裝與常用指令
 
 ```bash
-npm i          # 安裝依賴
-npm run dev    # watch 模式，編譯 src/main.ts → main.js
-npm run build  # 型別檢查 + 正式建置
+npm install    # 安裝依賴
+npm run dev    # watch 模式，編譯 src/main.ts → main.js（含 inline sourcemap）
+npm run build  # 型別檢查（tsc -noEmit）+ 正式建置（minify、無 sourcemap）
 npm run lint   # ESLint（含 obsidianmd 規則）
+npm run version # bump 版本號（version-bump.mjs）並 git add manifest.json versions.json
 ```
 
-原始碼依職責拆分：
+### 專案結構
+
+原始碼依職責拆分於 `src/`：
 
 | 檔案 | 職責 |
 |------|------|
-| `src/main.ts` | 插件生命週期、命令註冊、事件與更新排程 |
-| `src/view.ts` | Dashboard 畫面與互動 |
+| `src/main.ts` | 插件生命週期、命令註冊、vault／metadata 事件與更新排程（1 秒 debounce） |
+| `src/view.ts` | Dashboard 畫面渲染與互動 |
 | `src/counters.ts` | 筆記／專案／任務統計 |
 | `src/recent.ts` | 近期筆記與未完成任務清單 |
 | `src/tags.ts` | 標籤統計與標籤雲 |
+| `src/heatmap.ts` | 筆記建立時間熱力圖 |
+| `src/graph.ts` | 筆記關聯圖 |
 | `src/dotpm.ts` | 讀取 dotpm 的狀態、優先級設定 |
-| `src/settings.ts`、`src/settingsTab.ts` | 預設值與設定分頁 |
+| `src/settings.ts` | 設定介面與預設值 |
+| `src/settingsTab.ts` | 設定分頁 UI |
 | `src/i18n.ts` | 三語介面文字 |
 
-修改 `src/` 後執行 `npm run dev`，再重新載入 Obsidian 即可看到新版本。建置產物 `main.js` 不進版本控制，僅隨 release 發布。
+其他根目錄檔案：
 
-## 授權
+- `esbuild.config.mjs`：建置設定（entry `src/main.ts`，bundle，external obsidian/electron/codemirror 等）。
+- `tsconfig.json`：TypeScript 嚴格模式（`strict: true`）。
+- `eslint.config.mts`：ESLint 設定（含 `eslint-plugin-obsidianmd`）。
+- `manifest.json`、`versions.json`：插件 metadata 與版本對應。
+
+### 開發流程
+
+1. `npm run dev` 啟動 watch 模式。
+2. 修改 `src/` 後，esbuild 重新編譯為 `main.js`。
+3. 在 Obsidian 中重新載入插件（或重啟）即可看到新版本。
+4. 提交前執行 `npm run build`（型別檢查）與 `npm run lint`。
+
+建置產物 `main.js` 不進版本控制，僅隨 release 發布；`node_modules/` 也不提交。
+
+### 發佈
+
+遵循 Obsidian 社群插件慣例：
+
+1. 在 `manifest.json` bump `version`（SemVer），並更新 `versions.json` 對應最低 app 版本。
+2. 執行 `npm run version`（或手動）更新版本檔。
+3. 執行 `npm run build` 產生 `main.js`。
+4. 建立 GitHub release，tag 必須與 `manifest.json` 的 `version` 完全一致（不加前導 `v`）。
+5. 將 `manifest.json`、`main.js`、`styles.css` 作為獨立資產附加到 release。
+
+### 授權
 
 [GPL-3.0](LICENSE)。
