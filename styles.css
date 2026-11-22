@@ -356,6 +356,140 @@
 	pointer-events: none;
 }
 
+/* Recent notes / tasks: ruled lists. */
+.om-recent-list {
+	display: flex;
+	flex-direction: column;
+}
+
+.om-dashboard .om-recent-item,
+.om-dashboard .om-task-item {
+	display: block;
+	width: 100%;
+	height: auto;
+	min-height: 0;
+	margin: 0;
+	padding: 7px 4px;
+	color: var(--text-normal);
+	text-align: left;
+	font-size: 13px;
+	line-height: 1.35;
+	background-color: transparent;
+	border: 0;
+	border-bottom: 1px solid var(--background-modifier-border);
+	border-radius: 0;
+	box-shadow: none;
+	cursor: pointer;
+	white-space: nowrap;
+	overflow: hidden;
+	text-overflow: ellipsis;
+}
+
+.om-dashboard .om-recent-item:last-child,
+.om-dashboard .om-task-item:last-child {
+	border-bottom: 0;
+}
+
+.om-dashboard .om-recent-item:hover,
+.om-dashboard .om-task-item:hover {
+	background-color: var(--background-modifier-hover);
+	border-radius: 6px;
+}
+
+.om-dashboard .om-recent-item:focus-visible,
+.om-dashboard .om-task-item:focus-visible {
+	outline: 1px solid var(--om-accent);
+	outline-offset: 2px;
+	border-radius: 6px;
+}
+
+.om-recent-category,
+.om-task-project {
+	color: var(--text-muted);
+}
+
+.om-recent-sep {
+	margin: 0 4px;
+	color: var(--text-faint);
+}
+
+.om-recent-title,
+.om-task-title {
+	color: var(--text-normal);
+}
+
+.om-task-line {
+	overflow: hidden;
+	text-overflow: ellipsis;
+	white-space: nowrap;
+}
+
+.om-task-meta {
+	margin-top: 2px;
+	color: var(--text-muted);
+	font-size: 11px;
+	letter-spacing: 0.02em;
+	font-variant-numeric: tabular-nums;
+}
+
+/* Tag cloud: size by usage, hue spread across the list for a rainbow sweep. */
+.om-tag-cloud {
+	display: flex;
+	flex-wrap: wrap;
+	align-items: baseline;
+	gap: 6px 12px;
+	padding-top: 4px;
+}
+
+.om-tag {
+	--om-tag-hue: 210;
+	height: auto;
+	min-height: 0;
+	margin: 0;
+	padding: 0;
+	background: linear-gradient(
+		100deg,
+		hsl(var(--om-tag-hue) 72% 40%),
+		hsl(calc(var(--om-tag-hue) + 60) 78% 50%)
+	);
+	-webkit-background-clip: text;
+	background-clip: text;
+	-webkit-text-fill-color: transparent;
+	color: transparent;
+	border: 0;
+	border-radius: 0;
+	box-shadow: none;
+	font-weight: 600;
+	line-height: 1.15;
+	white-space: nowrap;
+	cursor: pointer;
+}
+
+.theme-dark .om-tag {
+	background: linear-gradient(
+		100deg,
+		hsl(var(--om-tag-hue) 78% 66%),
+		hsl(calc(var(--om-tag-hue) + 60) 82% 74%)
+	);
+	-webkit-background-clip: text;
+	background-clip: text;
+}
+
+.om-tag:hover {
+	filter: brightness(1.15);
+}
+
+.om-tag:focus-visible {
+	outline: 1px solid var(--om-accent);
+	outline-offset: 2px;
+}
+
+.om-card-empty {
+	color: var(--text-muted);
+	font-size: 13px;
+	padding-top: 8px;
+}
+
 @media (max-width: 900px) {
 	.om-cards { grid-template-columns: repeat(2, minmax(0, 1fr)); }
 	.om-date-card { grid-column: 1 / -1; min-height: 180px; }

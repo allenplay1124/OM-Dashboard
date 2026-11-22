@@ -4,6 +4,7 @@ export interface DotpmOption {
 	id: string;
 	label: string;
 	color?: string;
+	complete?: boolean;
 }
 
 export interface DotpmMeta {
@@ -22,9 +23,14 @@ function parseOptions(value: unknown): DotpmOption[] {
 	const options: DotpmOption[] = [];
 	for (const item of value) {
 		if (!item || typeof item !== 'object') continue;
-		const { id, label, color } = item as Record<string, unknown>;
+		const { id, label, color, complete } = item as Record<string, unknown>;
 		if (typeof id !== 'string' || typeof label !== 'string') continue;
-		options.push({ id, label, color: typeof color === 'string' ? color : undefined });
+		options.push({
+			id,
+			label,
+			color: typeof color === 'string' ? color : undefined,
+			complete: complete === true,
+		});
 	}
 	return options;
 }

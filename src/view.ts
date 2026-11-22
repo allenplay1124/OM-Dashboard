@@ -5,11 +5,21 @@ import { Lang, resolveLanguage, t, weekdays } from './i18n';
 import { OMDashboardSettings } from './settings';
 import { collectHeatmap, renderHeatmap } from './heatmap';
 import { collectGraph, mountGraph } from './graph';
+import { collectRecentNotes, collectRecentTasks, RecentNote, RecentTask, recentSignature } from './recent';
+import { collectTagCloud, renderTagCloud } from './tags';
 
 export const VIEW_TYPE_OM_DASHBOARD = 'om-dashboard';
 
 type CommandApp = App & {
 	commands: { executeCommandById(id: string): Promise<void> };
+};
+
+type SearchHost = App & {
+	internalPlugins?: {
+		getEnabledPluginById?: (id: string) => {
+			openGlobalSearch?: (query: string) => void;
+		} | null;
+	};
 };
 
 export class OMDashboardView extends ItemView {
@@ -53,7 +63,21 @@ export class OMDashboardView extends ItemView {
 		const counts = countDashboard(this.app, this.settings.notesRoot);
 		const heatmap = collectHeatmap(this.app, this.settings);
 		const graph = collectGraph(this.app, this.settings);
-		const signature = JSON.stringify(counts) + '|' + JSON.stringify(heatmap.buckets) + '|' + graph.nodes.length + '|' + graph.links.length;
+		const notes = collectRecentNotes(this.app, this.settings);
+		const tasks = collectRecentTasks(this.app);
+		const tags = collectTagCloud(this.app);
+		const signature =
+			JSON.stringify(counts) +
+			'|' +
+			JSON.stringify(heatmap.buckets) +
+			'|' +
+			graph.nodes.length +
+			'|' +
+			graph.links.length +
+			'|' +
+			recentSignature(notes, tasks) +
+			'|' +
+			tags.map((item) => `${item.tag}:${item.count}`).join(',');
 		if (this.lastSignature && signature === this.lastSignature) return;
 		this.lastSignature = signature;
 		this.lastCounts = counts;
@@ -83,6 +107,29 @@ export class OMDashboardView extends ItemView {
 		const graphData = collectGraph(this.app, this.settings);
 		const destroy = mountGraph(graphCard, graphData, this.app, lang, t);
 		this.cleanups.push(destroy);
+
+		const recentNotes = collectRecentNotes(this.app, this.settings);
+		this.renderRecentNotesCard(
+			cards.createDiv({ cls: 'om-card om-recent-notes-card' }),
+			recentNotes,
+			lang,
+		);
+
+		const recentTasks = collectRecentTasks(this.app);
+		this.renderRecentTasksCard(
+			cards.createDiv({ cls: 'om-card om-recent-tasks-card' }),
+			recentTasks,
+			lang,
+		);
+
+		const tags = collectTagCloud(this.app);
+		renderTagCloud(
+			cards.createDiv({ cls: 'om-card om-tag-cloud-card' }),
+			tags,
+			lang,
+			t,
+			(tag) => this.openSearch(`tag:${tag.replace(/^#/, '')}`),
+		);
 	}
 
 	private renderHero(root: HTMLElement, lang: Lang): void {
@@ -107,7 +154,16 @@ export class OMDashboardView extends ItemView {
 		});
 	}
 
-	private async openSearch(query: string): Promise<void> {
+	private openSearch(query: string): void {
+		const search = (this.app as SearchHost).internalPlugins?.getEnabledPluginById?.('global-search');
+		if (search?.openGlobalSearch) {
+			search.openGlobalSearch(query);
+			return;
+		}
+		void this.openSearchFallback(query);
+	}
+
+	private async openSearchFallback(query: string): Promise<void> {
 		await (this.app as CommandApp).commands.executeCommandById('global-search:open');
 		const leaf = this.app.workspace.getLeavesOfType('search')[0];
 		if (leaf) {
@@ -200,6 +256,55 @@ export class OMDashboardView extends ItemView {
 		};
 		renderGroup(t(lang, 'taskByStatus'), counts.taskByStatus, meta?.statuses ?? []);
 		renderGroup(t(lang, 'taskByPriority'), counts.taskByPriority, meta?.priorities ?? []);
+	}
+
+	private renderRecentNotesCard(card: HTMLElement, notes: RecentNote[], lang: Lang): void {
+		card.createDiv({ cls: 'om-card-title', text: t(lang, 'recentNotes') });
+		if (!notes.length) {
+			card.createDiv({ cls: 'om-card-empty', text: t(lang, 'noRecentNotes') });
+			return;
+		}
+
+		const list = card.createDiv({ cls: 'om-recent-list' });
+		for (const note of notes) {
+			const row = list.createEl('button', {
+				cls: 'om-recent-item',
+				attr: { title: note.file.path },
+			});
+			if (note.category) {
+				row.createSpan({ cls: 'om-recent-category', text: note.category });
+				row.createSpan({ cls: 'om-recent-sep', text: '/' });
+			}
+			row.createSpan({ cls: 'om-recent-title', text: note.title });
+			row.addEventListener('click', () => void this.app.workspace.getLeaf(false).openFile(note.file));
+		}
+	}
+
+	private renderRecentTasksCard(card: HTMLElement, tasks: RecentTask[], lang: Lang): void {
+		card.createDiv({ cls: 'om-card-title', text: t(lang, 'recentTasks') });
+		if (!tasks.length) {
+			card.createDiv({ cls: 'om-card-empty', text: t(lang, 'noRecentTasks') });
+			return;
+		}
+
+		const list = card.createDiv({ cls: 'om-recent-list' });
+		for (const task of tasks) {
+			const row = list.createEl('button', {
+				cls: 'om-task-item',
+				attr: { title: task.file.path },
+			});
+			const line = row.createDiv({ cls: 'om-task-line' });
+			if (task.project) {
+				line.createSpan({ cls: 'om-task-project', text: task.project });
+				line.createSpan({ cls: 'om-recent-sep', text: '/' });
+			}
+			line.createSpan({ cls: 'om-task-title', text: task.title });
+			row.createDiv({
+				cls: 'om-task-meta',
+				text: [task.start || '—', task.due || '—', task.progress || '—'].join('/'),
+			});
+			row.addEventListener('click', () => void this.app.workspace.getLeaf(false).openFile(task.file));
+		}
 	}
 
 	private async createNote(lang: Lang): Promise<void> {
