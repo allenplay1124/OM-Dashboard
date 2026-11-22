@@ -206,10 +206,11 @@ export class OMDashboardView extends ItemView {
 		const actions: Array<[string, string, () => void | Promise<void>]> = [
 			['file-plus', t(lang, 'newNote'), () => this.createNote(lang)],
 			['folder-plus', t(lang, 'newProject'), () => this.runDotpm('new-project', lang)],
-			['checkbox', t(lang, 'newTask'), () => this.runDotpm('new-task', lang)],
+			['list-todo', t(lang, 'newTask'), () => this.runDotpm('new-task', lang)],
 		];
+		const grid = card.createDiv({ cls: 'om-actions-grid' });
 		for (const [icon, label, action] of actions) {
-			const button = card.createEl('button', { cls: 'om-action' });
+			const button = grid.createEl('button', { cls: 'om-action' });
 			setIcon(button, icon);
 			button.appendText(label);
 			button.addEventListener('click', () => void action());
