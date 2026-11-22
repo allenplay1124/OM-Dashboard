@@ -3,6 +3,8 @@ import { countDashboard, DashboardCounts } from './counters';
 import { DotpmOption, readDotpmMeta } from './dotpm';
 import { Lang, resolveLanguage, t, weekdays } from './i18n';
 import { OMDashboardSettings } from './settings';
+import { collectHeatmap, renderHeatmap } from './heatmap';
+import { collectGraph, mountGraph } from './graph';
 
 export const VIEW_TYPE_OM_DASHBOARD = 'om-dashboard';
 
@@ -13,6 +15,8 @@ type CommandApp = App & {
 export class OMDashboardView extends ItemView {
 	private readonly settings: OMDashboardSettings;
 	private lastCounts?: DashboardCounts;
+	private lastSignature?: string;
+	private cleanups: Array<() => void> = [];
 
 	constructor(leaf: WorkspaceLeaf, settings: OMDashboardSettings) {
 		super(leaf);
@@ -35,6 +39,11 @@ export class OMDashboardView extends ItemView {
 		this.rebuild();
 	}
 
+	async onClose(): Promise<void> {
+		for (const fn of this.cleanups) fn();
+		this.cleanups = [];
+	}
+
 	/* Rebuild only for settings/date changes; count changes update text in place. */
 	rebuild(): void {
 		this.render();
@@ -42,14 +51,19 @@ export class OMDashboardView extends ItemView {
 
 	refresh(): void {
 		const counts = countDashboard(this.app, this.settings.notesRoot);
-		if (this.lastCounts && JSON.stringify(counts) === JSON.stringify(this.lastCounts)) {
-			return;
-		}
+		const heatmap = collectHeatmap(this.app, this.settings);
+		const graph = collectGraph(this.app, this.settings);
+		const signature = JSON.stringify(counts) + '|' + JSON.stringify(heatmap.buckets) + '|' + graph.nodes.length + '|' + graph.links.length;
+		if (this.lastSignature && signature === this.lastSignature) return;
+		this.lastSignature = signature;
 		this.lastCounts = counts;
 		this.render();
 	}
 
 	private render(): void {
+		for (const fn of this.cleanups) fn();
+		this.cleanups = [];
+
 		const root = this.contentEl;
 		root.empty();
 		root.addClass('om-dashboard');
@@ -60,6 +74,15 @@ export class OMDashboardView extends ItemView {
 		this.renderDateCard(cards.createDiv({ cls: 'om-card om-date-card' }), lang);
 		this.renderActionsCard(cards.createDiv({ cls: 'om-card om-actions-card' }), lang);
 		this.renderStatsCard(cards.createDiv({ cls: 'om-card om-stats-card' }), lang);
+
+		const heatmapCard = cards.createDiv({ cls: 'om-card om-heatmap-card' });
+		const heatmapData = collectHeatmap(this.app, this.settings);
+		renderHeatmap(heatmapCard, heatmapData.buckets, heatmapData.start, heatmapData.total, lang, t);
+
+		const graphCard = cards.createDiv({ cls: 'om-card om-graph-card' });
+		const graphData = collectGraph(this.app, this.settings);
+		const destroy = mountGraph(graphCard, graphData, this.app, lang, t);
+		this.cleanups.push(destroy);
 	}
 
 	private renderHero(root: HTMLElement, lang: Lang): void {
