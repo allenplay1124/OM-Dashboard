@@ -173,23 +173,95 @@
 	outline-offset: 2px;
 }
 
-/* Stats card: label / numeral pairs. */
-.om-stat {
-	display: flex;
-	align-items: baseline;
-	justify-content: space-between;
-	padding: 7px 0;
+/* Stats card: almanac figures above a two-column breakdown ledger. */
+.om-stat-primary {
+	display: grid;
+	grid-template-columns: repeat(3, 1fr);
+	padding-bottom: 14px;
 	border-bottom: 1px solid var(--background-modifier-border);
 }
 
-.om-stat:last-child { border-bottom: 0; }
+.om-stat-figure {
+	display: flex;
+	flex-direction: column;
+	align-items: center;
+	gap: 3px;
+}
 
-.om-stat-label { color: var(--text-muted); }
+.om-stat-figure + .om-stat-figure {
+	border-left: 1px solid var(--background-modifier-border);
+}
 
-.om-stat-value {
+.om-stat-figure .om-stat-value {
 	font-family: var(--om-serif);
-	font-size: 28px;
+	font-size: clamp(26px, 2.6vw, 34px);
+	line-height: 1.1;
 	font-variant-numeric: tabular-nums;
+}
+
+.om-stat-figure .om-stat-label {
+	color: var(--text-muted);
+	font-size: 11px;
+	letter-spacing: 0.06em;
+}
+
+.om-stat-breakdowns {
+	display: grid;
+	grid-template-columns: repeat(2, minmax(0, 1fr));
+	gap: 2px 18px;
+	padding-top: 14px;
+}
+
+.om-stat-group + .om-stat-group {
+	border-left: 1px solid var(--background-modifier-border);
+	padding-left: 18px;
+}
+
+.om-stat-group-title {
+	margin-bottom: 6px;
+	color: var(--text-muted);
+	font-size: 11px;
+	letter-spacing: 0.06em;
+}
+
+.om-stat-row {
+	display: flex;
+	align-items: baseline;
+	gap: 6px;
+	padding: 3px 0;
+}
+
+.om-stat-row .om-stat-label {
+	white-space: nowrap;
+	overflow: hidden;
+	text-overflow: ellipsis;
+}
+
+.om-stat-dot {
+	flex: 0 0 auto;
+	width: 6px;
+	height: 6px;
+	border-radius: 50%;
+}
+
+.om-stat-leader {
+	flex: 1;
+	min-width: 12px;
+	border-bottom: 1px dotted var(--background-modifier-border);
+	transform: translateY(-3px);
+}
+
+.om-stat-row .om-stat-value {
+	font-family: var(--om-serif);
+	font-size: 16px;
+	font-variant-numeric: tabular-nums;
+}
+
+.om-stat-empty {
+	grid-column: 1 / -1;
+	color: var(--text-muted);
+	font-size: 13px;
+	padding-top: 4px;
 }
 
 .om-upload {
@@ -213,6 +285,13 @@
 	.om-hero { min-height: 180px; padding: 16px; }
 	.om-cards { grid-template-columns: 1fr; padding: 18px 14px 0; }
 	.om-date-card { grid-column: auto; }
+	.om-stat-breakdowns { grid-template-columns: 1fr; }
+	.om-stat-group + .om-stat-group {
+		border-left: 0;
+		padding-left: 0;
+		padding-top: 10px;
+		border-top: 1px solid var(--background-modifier-border);
+	}
 }
 
 @media (prefers-reduced-motion: reduce) {

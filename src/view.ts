@@ -1,5 +1,6 @@
 import { App, ItemView, Notice, setIcon, TFile, WorkspaceLeaf } from 'obsidian';
 import { countDashboard, DashboardCounts } from './counters';
+import { DotpmOption, readDotpmMeta } from './dotpm';
 import { Lang, resolveLanguage, t, weekdays } from './i18n';
 import { OMDashboardSettings } from './settings';
 
@@ -12,7 +13,6 @@ type CommandApp = App & {
 export class OMDashboardView extends ItemView {
 	private readonly settings: OMDashboardSettings;
 	private lastCounts?: DashboardCounts;
-	private statValues: HTMLElement[] = [];
 
 	constructor(leaf: WorkspaceLeaf, settings: OMDashboardSettings) {
 		super(leaf);
@@ -42,25 +42,11 @@ export class OMDashboardView extends ItemView {
 
 	refresh(): void {
 		const counts = countDashboard(this.app, this.settings.notesRoot);
-		const previous = this.lastCounts;
-		if (
-			this.statValues.length === 3 &&
-			previous &&
-			counts.notes === previous.notes &&
-			counts.projects === previous.projects &&
-			counts.tasks === previous.tasks
-		) {
+		if (this.lastCounts && JSON.stringify(counts) === JSON.stringify(this.lastCounts)) {
 			return;
 		}
 		this.lastCounts = counts;
-		if (this.statValues.length === 3) {
-			const values = [counts.notes, counts.projects, counts.tasks];
-			for (let index = 0; index < 3; index += 1) {
-				this.statValues[index]!.textContent = String(values[index]);
-			}
-		} else {
-			this.render();
-		}
+		this.render();
 	}
 
 	private render(): void {
@@ -139,18 +125,58 @@ export class OMDashboardView extends ItemView {
 	private renderStatsCard(card: HTMLElement, lang: Lang): void {
 		const counts = countDashboard(this.app, this.settings.notesRoot);
 		this.lastCounts = counts;
-		this.statValues = [];
 		card.createDiv({ cls: 'om-card-title', text: t(lang, 'stats') });
-		const rows: Array<[string, number]> = [
+
+		const primary = card.createDiv({ cls: 'om-stat-primary' });
+		const figures: Array<[string, number]> = [
 			[t(lang, 'notes'), counts.notes],
 			[t(lang, 'projects'), counts.projects],
 			[t(lang, 'tasks'), counts.tasks],
 		];
-		for (const [label, value] of rows) {
-			const row = card.createDiv({ cls: 'om-stat' });
-			row.createSpan({ cls: 'om-stat-label', text: label });
-			this.statValues.push(row.createSpan({ cls: 'om-stat-value', text: String(value) }));
+		for (const [label, value] of figures) {
+			const figure = primary.createDiv({ cls: 'om-stat-figure' });
+			figure.createSpan({ cls: 'om-stat-value', text: String(value) });
+			figure.createSpan({ cls: 'om-stat-label', text: label });
 		}
+
+		const breakdowns = card.createDiv({ cls: 'om-stat-breakdowns' });
+		if (counts.tasks === 0) {
+			breakdowns.createDiv({ cls: 'om-stat-empty', text: t(lang, 'noTasks') });
+			return;
+		}
+
+		const meta = readDotpmMeta(this.app);
+		const renderGroup = (title: string, data: Record<string, number>, options: DotpmOption[]) => {
+			const group = breakdowns.createDiv({ cls: 'om-stat-group' });
+			group.createDiv({ cls: 'om-stat-group-title', text: title });
+
+			const order = new Map(options.map((option, index) => [option.id, index]));
+			const optionById = new Map(options.map((option) => [option.id, option]));
+			const rows = Object.entries(data)
+				.filter(([, value]) => value > 0)
+				.sort((a, b) => {
+					const ai = order.get(a[0]);
+					const bi = order.get(b[0]);
+					if (ai !== undefined && bi !== undefined) return ai - bi;
+					if (ai !== undefined) return -1;
+					if (bi !== undefined) return 1;
+					return b[1] - a[1];
+				});
+
+			for (const [key, value] of rows) {
+				const option = optionById.get(key);
+				const row = group.createDiv({ cls: 'om-stat-row' });
+				if (option?.color) {
+					row.createSpan({ cls: 'om-stat-dot' }).style.backgroundColor = option.color;
+				}
+				const label = key === 'unset' ? t(lang, 'unset') : option?.label ?? key;
+				row.createSpan({ cls: 'om-stat-label', text: label });
+				row.createDiv({ cls: 'om-stat-leader' });
+				row.createSpan({ cls: 'om-stat-value', text: String(value) });
+			}
+		};
+		renderGroup(t(lang, 'taskByStatus'), counts.taskByStatus, meta?.statuses ?? []);
+		renderGroup(t(lang, 'taskByPriority'), counts.taskByPriority, meta?.priorities ?? []);
 	}
 
 	private async createNote(lang: Lang): Promise<void> {
