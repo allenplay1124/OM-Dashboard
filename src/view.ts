@@ -91,6 +91,7 @@ export class OMDashboardView extends ItemView {
 		const root = this.contentEl;
 		root.empty();
 		root.addClass('om-dashboard');
+		root.style.setProperty('--om-accent', this.settings.accentColor);
 		const lang = resolveLanguage(this.settings.language);
 
 		this.renderHero(root, lang);
@@ -105,7 +106,7 @@ export class OMDashboardView extends ItemView {
 
 		const graphCard = cards.createDiv({ cls: 'om-card om-graph-card' });
 		const graphData = collectGraph(this.app, this.settings);
-		const destroy = mountGraph(graphCard, graphData, this.app, lang, t);
+		const destroy = mountGraph(graphCard, graphData, this.app, lang, t, this.settings.accentColor);
 		this.cleanups.push(destroy);
 
 		const recentNotes = collectRecentNotes(this.app, this.settings);
@@ -141,7 +142,21 @@ export class OMDashboardView extends ItemView {
 			}
 		}
 
-		const search = hero.createDiv({ cls: 'om-search' });
+		const content = hero.createDiv({ cls: 'om-hero-content' });
+		const hour = new Date().getHours();
+		const greetingKey =
+			hour >= 6 && hour < 11
+				? 'greetingMorning'
+				: hour >= 11 && hour < 18
+					? 'greetingAfternoon'
+					: 'greetingEvening';
+		const name = this.settings.nickname.trim();
+		content.createEl('h1', {
+			cls: 'om-greeting',
+			text: `${t(lang, greetingKey)}${name ? `，${name}` : ''}`,
+		});
+
+		const search = content.createDiv({ cls: 'om-search' });
 		setIcon(search, 'search');
 		const input = search.createEl('input', {
 			type: 'search',

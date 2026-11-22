@@ -107,6 +107,7 @@ export function mountGraph(
 	app: App,
 	lang: Lang,
 	t: (lang: Lang, key: string) => string,
+	accent: string,
 ): () => void {
 	container.empty();
 	container.createDiv({ cls: 'om-card-title', text: t(lang, 'graph') });
@@ -169,7 +170,7 @@ export function mountGraph(
 		for (const nd of nodes) {
 			ctx.beginPath();
 			ctx.arc(cx + nd.x * scale, cy + nd.y * scale, 3 + Math.min(nd.degree, 6), 0, Math.PI * 2);
-			ctx.fillStyle = '#2f6f6b';
+			ctx.fillStyle = accent;
 			ctx.fill();
 		}
 	};
