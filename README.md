@@ -1,92 +1,89 @@
-# Obsidian Sample Plugin
+# OM Dashboard
 
-This is a sample plugin for Obsidian (https://obsidian.md).
+把 Obsidian 變成個人工作台的自訂 Dashboard 檢視：一眼看到今天、快速新增內容，並統計筆記、專案與任務。
 
-This project uses TypeScript to provide type checking and documentation.
-The repo depends on the latest plugin API (obsidian.d.ts) in TypeScript Definition format, which contains TSDoc comments describing what it does.
+## 功能
 
-This sample plugin demonstrates some of the basic functionality the plugin API can do.
+- **頁首**：可設定背景圖；在搜尋框輸入關鍵字後按 Enter，會開啟 Obsidian 全域搜尋並帶入關鍵字。
+- **日期卡**：顯示當天的年、月、日與星期（跟隨系統語言設定）。
+- **快速新增**：新增筆記、新增專案、新增任務。
+- **統計**：顯示筆記／專案／任務數量，任務再依狀態與優先級分組；若 dotpm 有設定顏色，分組前會顯示對應色點。
+- **自動更新**：vault 內新增、刪除、重命名檔案或筆記內容變更後，約 1 秒內更新儀表板。
 
-- Adds a ribbon icon, which shows a Notice when clicked.
-- Adds a command "Open modal (simple)" which opens a Modal.
-- Adds a plugin setting tab to the settings page.
-- Registers a global click event and outputs a Notice on click.
-- Registers a global interval which logs 'setInterval' to the console.
+## 需求
 
-## First time developing plugins?
+- Obsidian 1.8.7 以上。插件未限制桌面平台。
+- 選用：dotpm（插件 ID `project-manager`）。「新增專案」「新增任務」兩顆按鈕會呼叫它的指令；統計的狀態／優先級標籤與顏色也讀自它的設定。未安裝時，這兩顆按鈕仍會出現，但執行會失敗；標籤則退回顯示原始 ID。
 
-Quick starting guide for new plugin devs:
+## 安裝
 
-- Check if [someone already developed a plugin for what you want](https://obsidian.md/plugins)! There might be an existing plugin similar enough that you can partner up with.
-- Make a copy of this repo as a template with the "Use this template" button (login to GitHub if you don't see it).
-- Clone your repo to a local development folder. For convenience, you can place this folder in your `.obsidian/plugins/your-plugin-name` folder.
-- Install NodeJS, then run `npm i` in the command line under your repo folder.
-- Run `npm run dev` to compile your plugin from `src/main.ts` to `main.js`.
-- Make changes to `src/main.ts` (or create new `.ts` files). Those changes should be automatically compiled into `main.js`.
-- Reload Obsidian to load the new version of your plugin.
-- Enable plugin in settings window.
-- For updates to the Obsidian API run `npm update` in the command line under your repo folder.
+1. 取得 `main.js`、`manifest.json`、`styles.css`（自行建置或從 GitHub release 下載）。
+2. 放到 `<vault>/.obsidian/plugins/om-dashboard/`。
+3. 重新載入 Obsidian，到 **設定 → 社群插件** 啟用 **OM Dashboard**。
 
-## Releasing new releases
+## 使用
 
-- Update your `manifest.json` with your new version number, such as `1.0.1`, and the minimum Obsidian version required for your latest release.
-- Update your `versions.json` file with `"new-plugin-version": "minimum-obsidian-version"` so older versions of Obsidian can download an older version of your plugin that's compatible.
-- Create new GitHub release using your new version number as the "Tag version". Use the exact version number, don't include a prefix `v`. See here for an example: https://github.com/obsidianmd/obsidian-sample-plugin/releases
-- Upload the files `manifest.json`, `main.js`, `styles.css` as binary attachments. Note: The manifest.json file must be in two places, first the root path of your repository and also in the release.
-- Publish the release.
+開啟方式二選一：
 
-> You can simplify the version bump process by running `npm version patch`, `npm version minor` or `npm version major` after updating `minAppVersion` manually in `manifest.json`.
-> The command will bump version in `manifest.json` and `package.json`, and add the entry for the new version to `versions.json`
+- 點左側功能區的 `layout-dashboard` 圖示。
+- 開命令面板，執行 **開啟 Dashboard**（命令 ID：`open-dashboard`）。
 
-## Adding your plugin to the community plugin list
+再次開啟會重用現有的 Dashboard 分頁；從設定勾選啟動時開啟時，會另開新分頁。
 
-- Check the [plugin guidelines](https://docs.obsidian.md/Plugins/Releasing/Plugin+guidelines).
-- Publish an initial version.
-- Make sure you have a `README.md` file in the root of your repo.
-- Make a pull request at https://github.com/obsidianmd/obsidian-releases to add your plugin.
+### 設定
 
-## How to use
+到 **設定 → 社群插件 → OM Dashboard**：
 
-- Clone this repo.
-- Make sure your NodeJS is at least v18 (`node --version`).
-- `npm i` to install dependencies.
-- `npm run dev` to start compilation in watch mode.
+| 設定 | 說明 | 預設值 |
+|------|------|--------|
+| 語言 | 跟隨 Obsidian／繁體中文／简体中文／English | 跟隨 Obsidian |
+| 筆記根目錄 | 只統計這個資料夾下的筆記；留白則統計整個 vault（不含 dotpm 專案與任務） | 留白 |
+| 頁首背景圖 | 輸入 vault 內的圖片路徑，或拖拉／選擇圖片上傳。上傳的檔案存到 `附件/OM Dashboard/banner.*`，建議尺寸 1920 × 640 px | 留白 |
+| 啟動時開啟 | Obsidian 啟動時自動在主工作區開啟 Dashboard | 開啟 |
 
-## Manually installing the plugin
+介面文字由 `src/i18n.ts` 集中管理，目前支援繁體中文、简体中文與英文。
 
-- Copy over `main.js`, `styles.css`, `manifest.json` to your vault `VaultFolder/.obsidian/plugins/your-plugin-id/`.
+## 統計規則
 
-## Improve code quality with eslint
+統計只讀取 Markdown 檔案的 frontmatter，不會修改筆記內容：
 
-- [ESLint](https://eslint.org/) is a tool that analyzes your code to quickly find problems. You can run ESLint against your plugin to find common bugs and ways to improve your code.
-- This project already has eslint preconfigured, you can invoke a check by running`npm run lint`
-- Together with a custom eslint [plugin](https://github.com/obsidianmd/eslint-plugin) for Obsidan specific code guidelines.
-- A GitHub action is preconfigured to automatically lint every commit on all branches.
+- `pm-project: true` → 計入**專案**，不再計入筆記。
+- `pm-task: true` → 計入**任務**，不再計入筆記；同時讀取 `status` 與 `priority`。
+- 其他 Markdown 檔案 → 計入**筆記**。若設定了「筆記根目錄」，只計入該資料夾（含子資料夾）內的檔案。
+- `status` 或 `priority` 不存在時，歸入**未設定**。
 
-## Funding URL
-
-You can include funding URLs where people who use your plugin can financially support it.
-
-The simple way is to set the `fundingUrl` field to your link in your `manifest.json` file:
-
-```json
-{
-	"fundingUrl": "https://buymeacoffee.com"
-}
+```yaml
+---
+pm-task: true
+status: doing
+priority: high
+---
 ```
 
-If you have multiple URLs, you can also do:
+## 開發
 
-```json
-{
-	"fundingUrl": {
-		"Buy Me a Coffee": "https://buymeacoffee.com",
-		"GitHub Sponsor": "https://github.com/sponsors",
-		"Patreon": "https://www.patreon.com/"
-	}
-}
+需要 Node.js 18 以上，並使用 npm。
+
+```bash
+npm i          # 安裝依賴
+npm run dev    # watch 模式，編譯 src/main.ts → main.js
+npm run build  # 型別檢查 + 正式建置
+npm run lint   # ESLint（含 obsidianmd 規則）
 ```
 
-## API Documentation
+原始碼依職責拆分：
 
-See https://docs.obsidian.md
+| 檔案 | 職責 |
+|------|------|
+| `src/main.ts` | 插件生命週期、命令註冊、事件與更新排程 |
+| `src/view.ts` | Dashboard 畫面與互動 |
+| `src/counters.ts` | 筆記／專案／任務統計 |
+| `src/dotpm.ts` | 讀取 dotpm 的狀態、優先級設定 |
+| `src/settings.ts`、`src/settingsTab.ts` | 預設值與設定分頁 |
+| `src/i18n.ts` | 三語介面文字 |
+
+修改 `src/` 後執行 `npm run dev`，再重新載入 Obsidian 即可看到新版本。建置產物 `main.js` 不進版本控制，僅隨 release 發布。
+
+## 授權
+
+[GPL-3.0](LICENSE)。
