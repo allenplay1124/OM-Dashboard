@@ -140,6 +140,17 @@ export class OMDashboardSettingTab extends PluginSettingTab {
 					await this.plugin.saveSettings();
 				}),
 			);
+
+		new Setting(this.containerEl)
+			.setName(t(lang, 'dependentPlugins'))
+			.addButton((btn) =>
+				btn
+					.setButtonText('dotpm')
+					.setCta()
+					.onClick(() => {
+						window.open('https://community.obsidian.md/plugins/project-manager', '_blank');
+					}),
+			);
 	}
 
 	private async upload(file: File): Promise<void> {
