@@ -6,7 +6,6 @@ export interface OMDashboardSettings {
 	openOnStartup: boolean;
 	language: LanguageSetting;
 	nickname: string;
-	accentColor: string;
 }
 
 export const DEFAULT_SETTINGS: OMDashboardSettings = {
@@ -15,5 +14,4 @@ export const DEFAULT_SETTINGS: OMDashboardSettings = {
 	openOnStartup: true,
 	language: 'auto',
 	nickname: '',
-	accentColor: '#65B2AB',
 };

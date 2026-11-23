@@ -1,12 +1,10 @@
 import {
 	App,
-	ColorComponent,
 	Notice,
 	normalizePath,
 	Plugin,
 	PluginSettingTab,
 	Setting,
-	TextComponent,
 	TFolder,
 } from 'obsidian';
 import { LANGUAGE_OPTIONS, resolveLanguage, t } from './i18n';
@@ -58,33 +56,6 @@ export class OMDashboardSettingTab extends PluginSettingTab {
 						this.plugin.rebuildViews();
 					}),
 			);
-
-		let colorInput: ColorComponent | undefined;
-		let textInput: TextComponent | undefined;
-		new Setting(this.containerEl)
-			.setName(t(lang, 'accentColor'))
-			.setDesc(t(lang, 'accentColorDesc'))
-			.addColorPicker((color) => {
-				colorInput = color;
-				color.setValue(this.plugin.settings.accentColor).onChange(async (value) => {
-					this.plugin.settings.accentColor = value;
-					textInput?.setValue(value);
-					await this.plugin.saveSettings();
-					this.plugin.rebuildViews();
-				});
-			})
-			.addText((text) => {
-				textInput = text;
-				text.setValue(this.plugin.settings.accentColor)
-					.onChange(async (value) => {
-						const hex = value.trim();
-						if (!/^#[0-9a-f]{6}$/i.test(hex)) return;
-						this.plugin.settings.accentColor = hex;
-						colorInput?.setValue(hex);
-						await this.plugin.saveSettings();
-						this.plugin.rebuildViews();
-					});
-			});
 
 		new Setting(this.containerEl)
 			.setName(t(lang, 'notesRoot'))

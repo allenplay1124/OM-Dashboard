@@ -84,6 +84,13 @@ export class OMDashboardView extends ItemView {
 		this.render();
 	}
 
+	private getAccentColor(): string {
+		const body = getComputedStyle(document.body).getPropertyValue('--interactive-accent').trim();
+		if (body) return body;
+		const root = getComputedStyle(document.documentElement).getPropertyValue('--interactive-accent').trim();
+		return root || '#65B2AB';
+	}
+
 	private render(): void {
 		for (const fn of this.cleanups) fn();
 		this.cleanups = [];
@@ -91,7 +98,7 @@ export class OMDashboardView extends ItemView {
 		const root = this.contentEl;
 		root.empty();
 		root.addClass('om-dashboard');
-		root.style.setProperty('--om-accent', this.settings.accentColor);
+		root.style.setProperty('--om-accent', this.getAccentColor());
 		const lang = resolveLanguage(this.settings.language);
 
 		this.renderHero(root, lang);
@@ -106,7 +113,7 @@ export class OMDashboardView extends ItemView {
 
 		const graphCard = cards.createDiv({ cls: 'om-card om-graph-card' });
 		const graphData = collectGraph(this.app, this.settings);
-		const destroy = mountGraph(graphCard, graphData, this.app, lang, t, this.settings.accentColor);
+		const destroy = mountGraph(graphCard, graphData, this.app, lang, t, this.getAccentColor());
 		this.cleanups.push(destroy);
 
 		const recentNotes = collectRecentNotes(this.app, this.settings);
