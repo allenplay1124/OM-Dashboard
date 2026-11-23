@@ -177,7 +177,7 @@
 	letter-spacing: 0.3em;
 }
 
-/* Action card: grid of rounded pills. */
+/* Action card: grid of action buttons using Obsidian's accent style. */
 .om-actions-card {
 	display: flex;
 	flex-direction: column;
@@ -196,28 +196,13 @@
 	gap: 8px;
 	width: 100%;
 	margin: 0;
-	padding: 10px 12px;
-	color: var(--text-normal);
-	text-align: center;
-	background: var(--background-primary);
-	border: 1px solid var(--background-modifier-border);
-	border-radius: 999px;
-	box-shadow: none;
-	cursor: pointer;
-	transition: color 0.15s ease, background 0.15s ease, border-color 0.15s ease;
 }
 
-.om-action .svg-icon { color: var(--om-accent); }
-
-.om-action:hover {
-	color: var(--om-accent);
-	background: var(--background-modifier-hover);
-	border-color: var(--om-accent);
-}
-
-.om-action:focus-visible {
-	outline: 2px solid var(--om-accent);
-	outline-offset: 2px;
+.om-action.mod-cta .svg-icon {
+	color: var(--text-on-accent);
+	width: 18px;
+	height: 18px;
+	flex-shrink: 0;
 }
 
 /* Stats card: almanac figures above a two-column breakdown ledger. */

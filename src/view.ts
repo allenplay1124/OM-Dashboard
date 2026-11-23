@@ -254,7 +254,7 @@ export class OMDashboardView extends ItemView {
 		];
 		const grid = card.createDiv({ cls: 'om-actions-grid' });
 		for (const [icon, label, action] of actions) {
-			const button = grid.createEl('button', { cls: 'om-action' });
+			const button = grid.createEl('button', { cls: 'om-action mod-cta' });
 			setIcon(button, icon);
 			button.appendText(label);
 			button.addEventListener('click', () => void action());
