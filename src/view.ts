@@ -27,6 +27,9 @@ export class OMDashboardView extends ItemView {
 	private lastCounts?: DashboardCounts;
 	private lastSignature?: string;
 	private cleanups: Array<() => void> = [];
+	private greetingEl?: HTMLElement;
+	private dateCardEl?: HTMLElement;
+	private autoRefreshTimer?: number;
 
 	constructor(leaf: WorkspaceLeaf, settings: OMDashboardSettings) {
 		super(leaf);
@@ -47,9 +50,14 @@ export class OMDashboardView extends ItemView {
 
 	async onOpen(): Promise<void> {
 		this.rebuild();
+		this.startAutoRefresh();
 	}
 
 	async onClose(): Promise<void> {
+		if (this.autoRefreshTimer) {
+			window.clearInterval(this.autoRefreshTimer);
+			this.autoRefreshTimer = undefined;
+		}
 		for (const fn of this.cleanups) fn();
 		this.cleanups = [];
 	}
@@ -103,7 +111,8 @@ export class OMDashboardView extends ItemView {
 
 		this.renderHero(root, lang);
 		const cards = root.createDiv({ cls: 'om-cards' });
-		this.renderDateCard(cards.createDiv({ cls: 'om-card om-date-card' }), lang);
+		this.dateCardEl = cards.createDiv({ cls: 'om-card om-date-card' });
+		this.renderDateCard(this.dateCardEl, lang);
 		this.renderActionsCard(cards.createDiv({ cls: 'om-card om-actions-card' }), lang);
 		this.renderStatsCard(cards.createDiv({ cls: 'om-card om-stats-card' }), lang);
 
@@ -151,14 +160,9 @@ export class OMDashboardView extends ItemView {
 
 		const content = hero.createDiv({ cls: 'om-hero-content' });
 		const hour = new Date().getHours();
-		const greetingKey =
-			hour >= 6 && hour < 11
-				? 'greetingMorning'
-				: hour >= 11 && hour < 18
-					? 'greetingAfternoon'
-					: 'greetingEvening';
+		const greetingKey = this.getGreetingKey(hour);
 		const name = this.settings.nickname.trim();
-		content.createEl('h1', {
+		this.greetingEl = content.createEl('h1', {
 			cls: 'om-greeting',
 			text: `${t(lang, greetingKey)}${name ? `，${name}` : ''}`,
 		});
@@ -206,6 +210,39 @@ export class OMDashboardView extends ItemView {
 			cls: 'om-date-weekday',
 			text: weekdays(lang)[now.getDay()] ?? '',
 		});
+	}
+
+	private getGreetingKey(hour: number): 'greetingMorning' | 'greetingAfternoon' | 'greetingEvening' {
+		if (hour >= 6 && hour < 11) return 'greetingMorning';
+		if (hour >= 11 && hour < 18) return 'greetingAfternoon';
+		return 'greetingEvening';
+	}
+
+	private startAutoRefresh(): void {
+		if (this.autoRefreshTimer) window.clearInterval(this.autoRefreshTimer);
+		this.autoRefreshTimer = window.setInterval(() => {
+			this.updateTimeDependent();
+		}, 60 * 60 * 1000);
+	}
+
+	private updateTimeDependent(): void {
+		const lang = resolveLanguage(this.settings.language);
+		this.updateGreeting(lang);
+		this.updateDateCard(lang);
+	}
+
+	private updateGreeting(lang: Lang): void {
+		if (!this.greetingEl?.isConnected) return;
+		const hour = new Date().getHours();
+		const greetingKey = this.getGreetingKey(hour);
+		const name = this.settings.nickname.trim();
+		this.greetingEl.setText(`${t(lang, greetingKey)}${name ? `，${name}` : ''}`);
+	}
+
+	private updateDateCard(lang: Lang): void {
+		if (!this.dateCardEl?.isConnected) return;
+		this.dateCardEl.empty();
+		this.renderDateCard(this.dateCardEl, lang);
 	}
 
 	private renderActionsCard(card: HTMLElement, lang: Lang): void {
