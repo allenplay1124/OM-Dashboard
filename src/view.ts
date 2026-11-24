@@ -41,7 +41,7 @@ export class OMDashboardView extends ItemView {
 	}
 
 	getDisplayText(): string {
-		return 'OM Dashboard';
+		return 'Om dashboard';
 	}
 
 	getIcon(): string {

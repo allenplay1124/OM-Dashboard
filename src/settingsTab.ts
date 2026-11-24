@@ -24,6 +24,101 @@ export class OMDashboardSettingTab extends PluginSettingTab {
 		super(app, plugin);
 	}
 
+	/* Obsidian 1.13+ renders this instead of display(); keep both in sync. */
+	getSettingDefinitions() {
+		const lang = resolveLanguage(this.plugin.settings.language);
+		const saveAndRebuild = async () => {
+			await this.plugin.saveSettings();
+			this.plugin.rebuildViews();
+		};
+		return [
+			{
+				type: 'group' as const,
+				heading: t(lang, 'settingsHeading'),
+				items: [
+					{
+						name: t(lang, 'language'),
+						desc: t(lang, 'languageDesc'),
+						render: (setting: Setting) => {
+							setting.addDropdown((dropdown) =>
+								dropdown
+									.addOptions(Object.fromEntries(LANGUAGE_OPTIONS.map((o) => [o.value, o.label])))
+									.setValue(this.plugin.settings.language)
+									.onChange(async (value) => {
+										this.plugin.settings.language = value as OMDashboardSettings['language'];
+										await saveAndRebuild();
+										this.refreshTab();
+									}),
+							);
+						},
+					},
+					{
+						name: t(lang, 'nickname'),
+						desc: t(lang, 'nicknameDesc'),
+						render: (setting: Setting) => {
+							setting.addText((text) =>
+								text.setValue(this.plugin.settings.nickname).onChange(async (value) => {
+									this.plugin.settings.nickname = value.trim();
+									await saveAndRebuild();
+								}),
+							);
+						},
+					},
+					{
+						name: t(lang, 'notesRoot'),
+						desc: t(lang, 'notesRootDesc'),
+						render: (setting: Setting) => {
+							setting.addText((text) =>
+								text
+									.setPlaceholder(t(lang, 'notesRootPlaceholder'))
+									.setValue(this.plugin.settings.notesRoot)
+									.onChange(async (value) => {
+										this.plugin.settings.notesRoot = value.trim();
+										await saveAndRebuild();
+									}),
+							);
+						},
+					},
+					{
+						name: t(lang, 'headerBackground'),
+						desc: t(lang, 'headerBackgroundDesc'),
+						render: (setting: Setting) => {
+							setting.addText((text) =>
+								text
+									.setPlaceholder('附件/om-dashboard/banner.jpg')
+									.setValue(this.plugin.settings.headerBackground)
+									.onChange(async (value) => {
+										this.plugin.settings.headerBackground = value.trim();
+										await saveAndRebuild();
+									}),
+							);
+						},
+					},
+					{
+						name: t(lang, 'uploadHint'),
+						render: (setting: Setting) => this.mountUploader(setting.settingEl, lang),
+					},
+					{
+						name: t(lang, 'openOnStartup'),
+						desc: t(lang, 'openOnStartupDesc'),
+						render: (setting: Setting) => {
+							setting.addToggle((toggle) =>
+								toggle.setValue(this.plugin.settings.openOnStartup).onChange(async (value) => {
+									this.plugin.settings.openOnStartup = value;
+									await this.plugin.saveSettings();
+								}),
+							);
+						},
+					},
+					{
+						name: t(lang, 'dependentPlugins'),
+						action: () => window.open('https://community.obsidian.md/plugins/project-manager', '_blank'),
+					},
+				],
+			},
+		];
+	}
+
 	display(): void {
 		this.containerEl.empty();
 		const lang = resolveLanguage(this.plugin.settings.language);
@@ -85,22 +180,7 @@ export class OMDashboardSettingTab extends PluginSettingTab {
 					}),
 			);
 
-		const uploader = this.containerEl.createDiv({ cls: 'om-upload' });
-		uploader.createSpan({ text: t(lang, 'uploadHint') });
-		const input = uploader.createEl('input', {
-			type: 'file',
-			attr: { accept: 'image/*' },
-		});
-		input.addEventListener('change', () => {
-			const file = input.files?.[0];
-			if (file) void this.upload(file);
-		});
-		uploader.addEventListener('dragover', (event) => event.preventDefault());
-		uploader.addEventListener('drop', (event) => {
-			event.preventDefault();
-			const file = event.dataTransfer?.files[0];
-			if (file) void this.upload(file);
-		});
+		this.mountUploader(this.containerEl, lang);
 
 		new Setting(this.containerEl)
 			.setName(t(lang, 'openOnStartup'))
@@ -116,12 +196,37 @@ export class OMDashboardSettingTab extends PluginSettingTab {
 			.setName(t(lang, 'dependentPlugins'))
 			.addButton((btn) =>
 				btn
-					.setButtonText('dotpm')
+					.setButtonText('Dotpm')
 					.setCta()
 					.onClick(() => {
 						window.open('https://community.obsidian.md/plugins/project-manager', '_blank');
 					}),
 			);
+	}
+
+	private mountUploader(host: HTMLElement, lang: ReturnType<typeof resolveLanguage>): void {
+		const uploader = host.createDiv({ cls: 'om-upload' });
+		uploader.createSpan({ text: t(lang, 'uploadHint') });
+		const input = uploader.createEl('input', {
+			type: 'file',
+			attr: { accept: 'image/*' },
+		});
+		input.addEventListener('change', () => {
+			const file = input.files?.[0];
+			if (file) void this.upload(file);
+		});
+		uploader.addEventListener('dragover', (event) => event.preventDefault());
+		uploader.addEventListener('drop', (event) => {
+			event.preventDefault();
+			const file = event.dataTransfer?.files[0];
+			if (file) void this.upload(file);
+		});
+	}
+
+	private refreshTab(): void {
+		const tab = this as unknown as { update?: () => void };
+		if (tab.update) tab.update();
+		else this.display();
 	}
 
 	private async upload(file: File): Promise<void> {
@@ -141,7 +246,7 @@ export class OMDashboardSettingTab extends PluginSettingTab {
 			await this.plugin.saveSettings();
 			this.plugin.rebuildViews();
 			new Notice(t(resolveLanguage(this.plugin.settings.language), 'headerUpdated'));
-			this.display();
+			this.refreshTab();
 		} catch (error) {
 			new Notice(`${t(resolveLanguage(this.plugin.settings.language), 'uploadFailed')}${String(error)}`);
 		}
