@@ -33,8 +33,8 @@
 
 ### 安裝
 
-1. 取得 `main.js`、`manifest.json`、`styles.css`（自行建置或從 GitHub release 下載）。
-2. 放到 `<vault>/.obsidian/plugins/om-dashboard/`。
+1. 從 GitHub Release 下載 `om-dashboard.zip`。
+2. 解壓後，把 `om-dashboard` 資料夾放到 `<vault>/.obsidian/plugins/`。
 3. 重新載入 Obsidian，到 **設定 → 社群插件** 啟用 **OM Dashboard**。
 
 ### 使用
@@ -132,7 +132,7 @@ npm run version # bump 版本號（version-bump.mjs）並 git add manifest.json 
 3. 在 Obsidian 中重新載入插件（或重啟）即可看到新版本。
 4. 提交前執行 `npm run build`（型別檢查）與 `npm run lint`。
 
-建置產物 `main.js` 不進版本控制，僅隨 release 發布；`node_modules/` 也不提交。
+建置產物 `main.js` 不進版本控制，僅打包進 release 的 `om-dashboard.zip`；`node_modules/` 也不提交。
 
 ### 發佈
 
@@ -142,7 +142,7 @@ npm run version # bump 版本號（version-bump.mjs）並 git add manifest.json 
 2. 執行 `npm run version`（或手動）更新版本檔。
 3. 執行 `npm run build` 產生 `main.js`。
 4. 建立 GitHub release，tag 必須與 `manifest.json` 的 `version` 完全一致（不加前導 `v`）。
-5. 將 `manifest.json`、`main.js`、`styles.css` 作為獨立資產附加到 release。
+5. Release workflow 會將 `main.js`、`manifest.json`、`styles.css` 放入 `om-dashboard/`，打包成 `om-dashboard.zip` 並附加到 release。
 
 ### 授權
 

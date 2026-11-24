@@ -26,17 +26,20 @@ jobs:
                   npm ci
                   npm run build
 
-            - name: Check for optional styles
-              id: styles
+            - name: Package plugin
               run: |
-                  [ -f styles.css ] && echo "exists=true" >> "$GITHUB_OUTPUT" || echo "exists=false" >> "$GITHUB_OUTPUT"
+                  rm -rf .release
+                  mkdir -p .release/om-dashboard
+                  cp main.js manifest.json .release/om-dashboard/
+                  if [ -f styles.css ]; then
+                    cp styles.css .release/om-dashboard/
+                  fi
+                  (cd .release && zip -r ../om-dashboard.zip om-dashboard)
 
             - name: Attest build provenance
               uses: actions/attest@v4
               with:
-                  subject-path: |
-                      main.js
-                      ${{ steps.styles.outputs.exists == 'true' && 'styles.css' || '' }}
+                  subject-path: om-dashboard.zip
 
             - name: Create release
               env:
@@ -47,4 +50,4 @@ jobs:
                   gh release create "$tag" \
                     --title="$tag" \
                     --draft \
-                    main.js manifest.json ${{ steps.styles.outputs.exists == 'true' && 'styles.css' || '' }}
+                    om-dashboard.zip

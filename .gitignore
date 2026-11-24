@@ -12,6 +12,10 @@ node_modules
 # They should be uploaded to GitHub releases instead.
 main.js
 
+# Release packaging
+om-dashboard.zip
+.release/
+
 # Exclude sourcemaps
 *.map
 
