@@ -50,4 +50,4 @@ jobs:
                   gh release create "$tag" \
                     --title="$tag" \
                     --draft \
-                    om-dashboard.zip
+                    main.js manifest.json styles.css om-dashboard.zip

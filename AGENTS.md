@@ -47,6 +47,7 @@ npm run build
 - **不要提交建置產物**：永遠不要將 `node_modules/`、`main.js` 或其他產生的檔案提交到版本控制。
 - 保持插件輕量。避免大型依賴。優先使用瀏覽器相容的套件。
 - 產生的輸出應放在插件根目錄或 `dist/`（視建置設定而定）。發佈產物必須放在 vault 中插件資料夾的頂層（`main.js`、`manifest.json`、`styles.css`）。
+- **README 三語同步**：修改 `README.md` 時，必須同步更新 `README.zh-TW.md` 與 `README.zh-CN.md`，並保留開頭的語言切換連結。
 
 ## Manifest 規則（`manifest.json`）
 
@@ -112,6 +113,7 @@ npm run build
 ## 編碼慣例
 
 - 優先使用 `"strict": true` 的 TypeScript。
+- **CSS 避免使用 `!important`**：需要覆寫 Obsidian 預設樣式時，優先提高選擇器精確度或使用 CSS 變數。
 - **保持 `main.ts` 最小**：只專注於插件生命週期（onload、onunload、addCommand 呼叫）。將所有功能邏輯委派給其他模組。
 - **拆分大型檔案**：若任何檔案超過 ~200-300 行，考慮拆成更小、職責分明的模組。
 - **使用清楚的模組邊界**：每個檔案應有單一、定義良好的責任。
