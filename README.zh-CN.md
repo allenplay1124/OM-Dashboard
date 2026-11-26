@@ -2,6 +2,8 @@
 
 [English](README.md) · [繁體中文](README.zh-TW.md) · [简体中文](README.zh-CN.md)
 
+![OM Dashboard 封面](cover.png)
+
 将 Obsidian 变成个人工作台的自定义 Dashboard 视图：一眼看到今天、快速新增内容，并统计笔记、项目和任务。
 
 ---

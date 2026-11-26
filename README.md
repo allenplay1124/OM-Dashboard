@@ -2,6 +2,8 @@
 
 [English](README.md) · [繁體中文](README.zh-TW.md) · [简体中文](README.zh-CN.md)
 
+![OM Dashboard cover](cover.png)
+
 A custom Dashboard view that turns Obsidian into a personal workspace: see today at a glance, capture content quickly, and count notes, projects, and tasks.
 
 ---
